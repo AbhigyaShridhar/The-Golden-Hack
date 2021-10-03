@@ -6,7 +6,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View
 from django.contrib.auth.decorators import login_required
-from TheGoldenHack.backend.models import Stock, Transaction, User
+from .models import Stock, Transaction, User, TransactionHistory
 
 # Create your views here.
 def index(request):
@@ -121,6 +121,7 @@ class BuyStock(View):
         stock = Stock.objects.get(id=stock_id)
         user = self.request.user
         transaction = self.check_stock_id(stock_id)
+        intialQuant = 0
         if transaction is None:
             transaction = Transaction.objects.create(
                 user=user, 
@@ -128,11 +129,23 @@ class BuyStock(View):
                 quantity=request.quantity,
                 totalExpenditure=request.price,
             )
+            intialQuant = 0
             transaction.save()
         else:
+            intialQuant = transaction.quantity
             transaction.quantity += request.quantity
             transaction.totalExpenditure += request.price
             transaction.save()
+        transactionHistory = TransactionHistory.objects.create(
+            user = user.id,
+            intialQuantity = intialQuant,
+            finalQuantity = intialQuant + request.quantity,
+            stockQuote = stock.name,
+            priceAtWhichBought = request.price,
+            intialCredits = user.credits,
+            finalCredits = user.credits - request.price,
+        )
+        transactionHistory.save()
         user.credit -= request.price
         user.save()
         return HttpResponseRedirect(reverse("backend:stock_list"))
@@ -165,12 +178,23 @@ class SellStock(View):
             #show error that you don't have that stock
             return HttpResponseRedirect(reverse("backend:stock_list"))
         else:
+            intialQuant = transaction.quantity
             transaction.quantity -= request.quantity
             # update user credits and profit
             user.credits += request.price
             user.profit += request.price
             transaction.save()
-        return HttpResponseRedirect(reverse("backend:stock_list"))
+            transactionHistory = TransactionHistory.objects.create(
+                user = user.id,
+                intialQuantity = intialQuant,
+                finalQuantity = intialQuant - request.quantity,
+                stockQuote = stock.name,
+                priceAtWhichSold = request.price,
+                intialCredits = user.credits,
+                finalCredits = user.credits + request.price,
+            )
+            transactionHistory.save()
+            return HttpResponseRedirect(reverse("backend:stock_list"))
 
 # display all transactions and stocks owned by a user and (TODO) its transactions
 @login_required
@@ -240,4 +264,32 @@ class LeaderBoard(View):
         usersAndProfit = sorted(usersAndProfit, key=lambda k: k['profit'], reverse=True)
         return render(request, self.template, {
             'usersAndProfit': usersAndProfit,
+        })
+
+# add a friend to a user
+@login_required
+class AddFriend(View):
+    template = "backend/add_friend.html"
+
+    def add_friend(self, request, userID):
+        CurrentUser = self.request.user
+        user = User.objects.get(id=userID)
+        user.friends.add(request.user)
+        CurrentUser.friends.add(user)
+        CurrentUser.save()
+        user.save()
+        return HttpResponseRedirect(reverse("backend:user_profile", args=(userID,)))
+
+# get all the transaction history of a particular user.
+@login_required
+class TransactionHistoryOfAUser(View):
+    template = "backend/transaction_history.html"
+
+    def get_transaction_history(self, request, userID):
+        allTransactions = TransactionHistory.objects.raw(
+            'SELECT * FROM Transaction_History WHERE user = %s', [userID]
+        )
+        
+        return render(request, self.template, {
+            'allTransactionsDetails': allTransactions,
         })

@@ -25,3 +25,18 @@ class Transaction(models.Model):
     quantity = models.IntegerField(default=0, null=False, blank=False)
     #API
     totalExpenditure = models.IntegerField(default=0, blank=False, null=False)
+
+
+class TransactionHistory(models.Model):
+    user = models.OneToOneField(User, default=DEFAULT_USER_ID, primary_key=True, null=False, blank=False, related_name="Transaction_By", on_delete=models.CASCADE)
+    intialQuantity = models.IntegerField(default=0, null=False, blank=False)
+    finalQuantity = models.IntegerField(default=0, null=False, blank=False)
+    stockQuote = models.CharField(max_length=100, default="stock", blank=False, null=False)
+    priceAtWhichBought = models.IntegerField(default=0, null=False, blank=False)
+    priceAtWhichSold = models.IntegerField(default=0, null=False, blank=False)
+    intialCredits = models.IntegerField(default=0, null=False, blank=False)
+    finalCredits = models.IntegerField(default=0, null=False, blank=False)
+
+    class Meta:
+        verbose_name_plural = "Transaction History"
+        db_table = "Transaction_History"
