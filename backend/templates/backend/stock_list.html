@@ -11,6 +11,8 @@
       <td><a href="{% url 'backend:buy' stock.id %}">{{ stock.name }}</a></td>
       <br>
       <td>{{ stock.description }}</td>
+      <br>
+      <a href="{% url 'backend:buy' stock.id %}">BUY</a> or <a href="{% url 'backend:sell' stock.id %}">SELL</a> if owned
       <br><br>
     </tr>
   {% endfor %}

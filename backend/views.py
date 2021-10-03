@@ -7,6 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View
 from django.contrib.auth.decorators import login_required
 from .models import Stock, Transaction, User, TransactionHistory
+from .stockapi import intraday as intraday
+
 
 from .forms import LoginForm, RegisterForm
 
@@ -104,7 +106,7 @@ class BuyStock(View, LoginRequiredMixin):
     def get(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
         # get stock price using stock.name and store in curr_price
-        curr_price = 100
+        curr_price = curr_price = intraday(stock.name)
         return render(request, self.template, {
             'stock': stock,
             'price': curr_price,
@@ -112,7 +114,7 @@ class BuyStock(View, LoginRequiredMixin):
 
     # check if the stock id is present in user's transaction list
     def check_stock_id(self, request, stock_id):
-        user = request.user
+        user = User.objects.get(username="test_account")
         transactions = user.transactions.all()
         for transaction in transactions:
             if transaction.stock.id == stock_id:
@@ -123,35 +125,37 @@ class BuyStock(View, LoginRequiredMixin):
         stock = Stock.objects.get(id=stock_id)
         transaction = self.check_stock_id(request, stock_id)
         intialQuant = 0
-        user = request.user
+        user = User.objects.get(username="test_account")
 
         if transaction is None:
             transaction = Transaction.objects.create(
                 user=user,
                 stock=stock,
-                quantity=request.quantity,
-                totalExpenditure=request.price*request.quantity,
+                quantity=int(request.POST["shares"]),
+                totalExpenditure=intraday(stock.name) * int(request.POST["shares"]),
             )
             intialQuant = 0
             transaction.save()
         else:
             intialQuant = transaction.quantity
-            transaction.quantity += request.quantity
-            transaction.totalExpenditure += request.price
+            transaction.quantity += int(request.POST["shares"])
+            transaction.totalExpenditure += intraday(stock.name)
             transaction.save()
+            """
         transactionHistory = TransactionHistory.objects.create(
-            user = user.id,
+            user = user,
             intialQuantity = intialQuant,
-            finalQuantity = intialQuant + request.quantity,
+            finalQuantity = intialQuant + int(request.POST["shares"]),
             stockQuote = stock.name,
-            priceAtWhichBought = request.price,
+            priceAtWhichBought = intraday(stock.name),
             intialCredits = user.credits,
-            finalCredits = user.credits - request.price,
+            finalCredits = user.credits - intraday(stock.name),
         )
         transactionHistory.save()
-        user.credit -= request.price
+        """
+        user.credits -= intraday(stock.name)
         user.save()
-        return HttpResponseRedirect(reverse("backend:stock_list"))
+        return HttpResponseRedirect(reverse("backend:StockList"))
 
 # sell a particular stock and update that particular stock transaction and increase the user credits and user profit
 class SellStock(View, LoginRequiredMixin):
@@ -160,51 +164,57 @@ class SellStock(View, LoginRequiredMixin):
     def get(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
         # get stock price using stock.name and store in curr_price
-        curr_price = 100
-        user = self.request.user
-        transactions = user.transactions.all()
-        for transaction in transactions:
-            if transaction.stock.id == stock_id:
-                return render(request, self.template, {
+        curr_price = intraday(stock.name)
+        user = User.objects.get(username="test_account")
+        try:
+            transaction = Transaction.objects.get(user=user, stock=stock)
+        except Transaction.DoesNotExist:
+            return render(request, self.template, {
+                'stocks': Stock.objects.all(),
+                'message': "you don't own stocks of this company"
+            })
+        return render(request, self.template, {
                     'stock': stock,
                     'transaction': transaction,
                     'price': curr_price,
                 })
 
+
     # check if the stock id is present in user's transaction list
     def check_stock_id(self, stock_id):
-        user = self.request.user
-        transactions = user.transactions.all()
-        for transaction in transactions:
-            if transaction.stock.id == stock_id:
-                return transaction
-        return None
+        user = User.objects.get(username="test_account")
+        stock = Stock.objects.get(id=stock_id)
+        transaction = Transaction.objects.get(user=user, stock=stock)
+        return transaction
+
 
     def post(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
-        user = self.request.user
+        user = User.objects.get(username="test_account")
         transaction = self.check_stock_id(stock_id)
         if transaction is None:
             #show error that you don't have that stock
-            return HttpResponseRedirect(reverse("backend:stock_list"))
+            return HttpResponseRedirect(reverse("backend:StockList"))
         else:
             intialQuant = transaction.quantity
-            transaction.quantity -= request.quantity
+            transaction.quantity -= int(request.POST["shares"])
             # update user credits and profit
-            user.credits += request.price
-            user.profit += request.price
+            user.credits += intraday(stock.name)
+            user.profit += intraday(stock.name)
             transaction.save()
+            """
             transactionHistory = TransactionHistory.objects.create(
                 user = user.id,
                 intialQuantity = intialQuant,
                 finalQuantity = intialQuant - request.quantity,
                 stockQuote = stock.name,
-                priceAtWhichSold = request.price,
+                priceAtWhichSold = intraday(stock.name),
                 intialCredits = user.credits,
-                finalCredits = user.credits + request.price*request.quantity,
+                finalCredits = user.credits + intraday(stock.name)*request.quantity,
             )
             transactionHistory.save()
-            return HttpResponseRedirect(reverse("backend:stock_list"))
+            """
+            return HttpResponseRedirect(reverse("backend:StockList"))
 
 # display all transactions and stocks owned by a user and (TODO) its transactions
 class UserDashBoard(View, LoginRequiredMixin):
@@ -216,7 +226,7 @@ class UserDashBoard(View, LoginRequiredMixin):
         )
 
     def get(self, request):
-        user = self.request.user
+        user = User.objects.get(username="test_account")
         transactions = user.transactions.all()
         # for each transaction, get the stock details and store them together
         stocksAndTransactionDetails = []
@@ -274,16 +284,17 @@ class LeaderBoard(View):
         users = User.objects.all()
         usersAndProfit = []
         for user in users:
-            i = 1;
             usersAndProfit.append({
                 'id': user.id,
-                'rank': i,
                 'name' : user.username,
                 'profit' : user.profit,
                 'credits' : user.credits,
             })
-            i += 1
         usersAndProfit = sorted(usersAndProfit, key=lambda k: k['profit'], reverse=True)
+        rank = 1
+        for user in usersAndProfit:
+            user['rank'] = rank
+            rank += 1
         return render(request, self.template, {
             'usersAndProfit': usersAndProfit,
         })
@@ -294,9 +305,9 @@ class AddFriend(View, LoginRequiredMixin):
     template = "backend/add_friend.html"
 
     def post(self, request, userID):
-        CurrentUser = self.request.user
+        CurrentUser = User.objects.get(username="test_account")
         user = User.objects.get(id=userID)
-        user.friends.add(request.user)
+        user.friends.add(User.objects.get(username="test_account"))
         CurrentUser.friends.add(user)
         CurrentUser.save()
         user.save()

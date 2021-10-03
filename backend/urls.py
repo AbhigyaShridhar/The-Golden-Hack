@@ -11,5 +11,6 @@ urlpatterns = [
     path('accounts/register', views.Register.as_view(), name="register"),
     path('stocks/list', views.StockList.as_view(), name="StockList"),
     path('stocks/buy/<int:stock_id>', views.BuyStock.as_view(), name="buy"),
-    path('stocks/sell/<int:stock_id>', views.SellStock.as_view(), name="sell")
+    path('stocks/sell/<int:stock_id>', views.SellStock.as_view(), name="sell"),
+    path('leaderboard', views.LeaderBoard.as_view(), name="leaderboard"),
 ]

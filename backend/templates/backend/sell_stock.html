@@ -9,16 +9,15 @@
     <!-- display current quantity of stocks -->
     <h3>Current Stock Quantity: {{transaction.quantity}}</h3>
     <h3>Total Amount Bought of Stock: {{transaction.totalExpenditure}}</h3>
-    <form action="{% url 'backend:sell' %}" method="post">
+    <form action="{% url 'backend:sell' stock.id %}" method="post">
       {% csrf_token %}
         <div class="form-group">
-            <select class="form-control" name="symbol" required>
-                <option disabled selected value>{{ stock.name }}</option>
-            </select>
+            <input autofocus class="form-control" name="symbol"  value="{{ stock.name }}" readonly/>
         </div>
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="Shares" type="number" min="1" required />
-            <input autocomplete="off" autofocus class="form-control" name="price" placeholder="price" type="number" min="1" value={{price}} />
+            <br>
+            <input autocomplete="off" autofocus class="form-control" name="price" placeholder="price" min="1" value={{price}} />
         </div>
         <button class="btn btn-danger" type="submit">Sell</button>
     </form>

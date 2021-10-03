@@ -19,7 +19,7 @@ class Stock(models.Model):
 
 DEFAULT_USER_ID = 1
 class Transaction(models.Model):
-    stock = models.OneToOneField(Stock, verbose_name="STOCK_ID", primary_key=True, on_delete=models.CASCADE)
+    stock = models.ForeignKey(Stock, default=DEFAULT_USER_ID, null=False, blank=False, related_name="STOCK_ID", on_delete=models.CASCADE)
     user = models.ForeignKey(User, default=DEFAULT_USER_ID, null=False, blank=False, related_name="Operation_Performed_By", on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0, null=False, blank=False)
     #API
