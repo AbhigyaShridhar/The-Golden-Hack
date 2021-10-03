@@ -26,7 +26,6 @@ class Transaction(models.Model):
     #API
     totalExpenditure = models.IntegerField(default=0, blank=False, null=False)
 
-
 class TransactionHistory(models.Model):
     user = models.OneToOneField(User, default=DEFAULT_USER_ID, primary_key=True, null=False, blank=False, related_name="Transaction_By", on_delete=models.CASCADE)
     intialQuantity = models.IntegerField(default=0, null=False, blank=False)

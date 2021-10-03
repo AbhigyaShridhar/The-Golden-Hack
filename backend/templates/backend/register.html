@@ -1,0 +1,14 @@
+{% load crispy_forms_tags %}
+
+{% extends "layout.html" %}
+
+{% block title %}REGISTER{% endblock %}
+
+{% block main %}
+  <form action="{% url 'backend:register' %}" method="post">
+    {{ form | crispy }}
+    <button class="btn btn-primary" type="submit">Register</button>
+  </form>
+  <br>
+  Already have an account? <a href="{% url 'backend:login' %}">Login Here</a>.
+{% endblock %}

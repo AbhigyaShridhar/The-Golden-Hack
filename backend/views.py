@@ -12,9 +12,19 @@ from .models import Stock, Transaction, User, TransactionHistory
 def index(request):
     return HttpResponse("HELLO WORLD!!")
 
+# display all stocks present in the database
+class StockList(View, LoginRequiredMixin):
+    template = "backend/stock_list.html"
+
+    def get(self, request):
+        stocks = Stock.objects.all()
+        return render(request, self.template, {
+            'stocks': stocks,
+        })
+
 class login_view(View):
     template = "backend/login.html"
-    success_url = "backend:index"
+    success_url = "backend:StockList"
 
     def get(self, request):
         form = LoginForm()
@@ -47,7 +57,7 @@ class login_view(View):
 @login_required
 def logout_view(request):
     logout(request)
-    return HttpResponseRedirect(reverse("backend:index"))
+    return HttpResponseRedirect(reverse("backend:register"))
 
 class Register(View):
     template = 'backend/register.html'
@@ -83,23 +93,10 @@ class Register(View):
                     'message': "An Account With This User Name Already Exists",
                 })
 
-            return HttpResponseRedirect(reverse("backend:index"))
-
-
-# display all stocks present in the database
-@login_required
-class StockList(View):
-    template = "backend/stock_list.html"
-
-    def get(self, request):
-        stocks = Stock.objects.all()
-        return render(request, self.template, {
-            'stocks': stocks,
-        })
+            return HttpResponseRedirect(reverse("backend:StockList"))
 
 # buy a particular stock and create a transaction
-@login_required
-class BuyStock(View):
+class BuyStock(View, LoginRequiredMixin):
     template = "backend/buy_stock.html"
 
     def get_particular_stock(self, request, stock_id):
@@ -124,8 +121,8 @@ class BuyStock(View):
         intialQuant = 0
         if transaction is None:
             transaction = Transaction.objects.create(
-                user=user, 
-                stock=stock, 
+                user=user,
+                stock=stock,
                 quantity=request.quantity,
                 totalExpenditure=request.price,
             )
@@ -151,8 +148,7 @@ class BuyStock(View):
         return HttpResponseRedirect(reverse("backend:stock_list"))
 
 # sell a particular stock and update that particular stock transaction and increase the user credits and user profit
-@login_required
-class SellStock(View):
+class SellStock(View, LoginRequiredMixin):
     template = "backend/sell_stock.html"
 
     def get_particular_stock(self, request, stock_id):
@@ -197,8 +193,7 @@ class SellStock(View):
             return HttpResponseRedirect(reverse("backend:stock_list"))
 
 # display all transactions and stocks owned by a user and (TODO) its transactions
-@login_required
-class UserDashBoard(View):
+class UserDashBoard(View, LoginRequiredMixin):
     template = "backend/user_dashboard.html"
 
     def get_transaction_history(self, request, userID):
@@ -220,6 +215,7 @@ class UserDashBoard(View):
             })
         
         allTransactionDetials = get_transaction_history(self, request, user.id)
+
 
         return render(request, self.template, {
             'portfolioDetails': stocksAndTransactionDetails,
@@ -243,7 +239,7 @@ class UserProfile(View):
                 'description': stock.description,
                 'quantityOwned': transaction.quantity,
             })
-        
+
         userPortfolio = {
             'name' : user.username,
             'credits' : user.credits,
@@ -251,11 +247,11 @@ class UserProfile(View):
             'totalExpenditure' : totalExpenditure,
             'stockDetails' : stockDetails,
         }
-        
+
         return render(request, self.template, {
             'userPortfolio': userPortfolio,
         })
-    
+
 # create a leaderboard in which display all the users and their profit in descending order of profit
 class LeaderBoard(View):
     template = "backend/leaderboard.html"
@@ -274,9 +270,9 @@ class LeaderBoard(View):
             'usersAndProfit': usersAndProfit,
         })
 
-# add a friend to a user
 @login_required
-class AddFriend(View):
+class AddFriend(View, LoginRequiredMixin):
+# add a friend to a user
     template = "backend/add_friend.html"
 
     def add_friend(self, request, userID):
@@ -301,3 +297,4 @@ class AddFriend(View):
 #         return render(request, self.template, {
 #             'allTransactionsDetails': allTransactions,
 #         })
+
