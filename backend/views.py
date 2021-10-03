@@ -201,6 +201,11 @@ class SellStock(View):
 class UserDashBoard(View):
     template = "backend/user_dashboard.html"
 
+    def get_transaction_history(self, request, userID):
+        allTransactions = TransactionHistory.objects.raw(
+            'SELECT * FROM Transaction_History WHERE user = %s', [userID]
+        )
+
     def get_Stock_Owned_By_User(self, request):
         user = self.request.user
         transactions = user.transactions.all()
@@ -214,8 +219,11 @@ class UserDashBoard(View):
                 'transaction': transaction,
             })
         
+        allTransactionDetials = get_transaction_history(self, request, user.id)
+
         return render(request, self.template, {
             'portfolioDetails': stocksAndTransactionDetails,
+            'allTransactionDetials': allTransactionDetials,
         })
 
 # user public profile in which we show the user's credits, profit and its total stocks owned
@@ -281,15 +289,15 @@ class AddFriend(View):
         return HttpResponseRedirect(reverse("backend:user_profile", args=(userID,)))
 
 # get all the transaction history of a particular user.
-@login_required
-class TransactionHistoryOfAUser(View):
-    template = "backend/transaction_history.html"
+# @login_required
+# class TransactionHistoryOfAUser(View):
+#     template = "backend/transaction_history.html"
 
-    def get_transaction_history(self, request, userID):
-        allTransactions = TransactionHistory.objects.raw(
-            'SELECT * FROM Transaction_History WHERE user = %s', [userID]
-        )
+#     def get_transaction_history(self, request, userID):
+#         allTransactions = TransactionHistory.objects.raw(
+#             'SELECT * FROM Transaction_History WHERE user = %s', [userID]
+#         )
         
-        return render(request, self.template, {
-            'allTransactionsDetails': allTransactions,
-        })
+#         return render(request, self.template, {
+#             'allTransactionsDetails': allTransactions,
+#         })
