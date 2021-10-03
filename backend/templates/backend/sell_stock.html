@@ -10,6 +10,7 @@
     <h3>Current Stock Quantity: {{transaction.quantity}}</h3>
     <h3>Total Amount Bought of Stock: {{transaction.totalExpenditure}}</h3>
     <form action="{% url 'backend:sell' %}" method="post">
+      {% csrf_token %}
         <div class="form-group">
             <select class="form-control" name="symbol" required>
                 <option disabled selected value>{{ stock.name }}</option>

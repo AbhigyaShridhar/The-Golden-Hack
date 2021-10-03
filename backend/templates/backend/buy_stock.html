@@ -5,13 +5,15 @@
 {% endblock %}
 
 {% block main %}
-    <form action="{% url 'backend:buy' %}" method="post">
+    <form action="{% url 'backend:buy' stock.id %}" method="post">
+      {% csrf_token %}
         <!-- TODO get stock symbol and value  -->
         <div class="form-group">
             <h1>{{ stock.name }}</h1>
             <p>{{ stock.description }}</p>
             <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="Shares" type="number" min="1" required />
-            <input autofocus class="form-control" name="price" placeholder="price" type="number" min="1" required value={curr_price}}/>
+            <br>
+            <input autofocus class="form-control" name="price" type="number" value="{{ price }}" readonly/>
         </div>
         <button class="btn btn-primary" type="submit">Buy</button>
     </form>

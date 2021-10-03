@@ -7,6 +7,11 @@
 
 {% block main %}
   {% for stock in stocks %}
-    TODO
+    <tr>
+      <td><a href="{% url 'backend:buy' stock.id %}">{{ stock.name }}</a></td>
+      <br>
+      <td>{{ stock.description }}</td>
+      <br><br>
+    </tr>
   {% endfor %}
 {% endblock %}

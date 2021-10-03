@@ -111,8 +111,8 @@ class BuyStock(View, LoginRequiredMixin):
         })
 
     # check if the stock id is present in user's transaction list
-    def check_stock_id(self, stock_id):
-        user = self.request.user
+    def check_stock_id(self, request, stock_id):
+        user = request.user
         transactions = user.transactions.all()
         for transaction in transactions:
             if transaction.stock.id == stock_id:
@@ -121,9 +121,10 @@ class BuyStock(View, LoginRequiredMixin):
 
     def post(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
-        user = self.request.user
-        transaction = self.check_stock_id(stock_id)
+        transaction = self.check_stock_id(request, stock_id)
         intialQuant = 0
+        user = request.user
+
         if transaction is None:
             transaction = Transaction.objects.create(
                 user=user,
