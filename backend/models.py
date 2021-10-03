@@ -14,7 +14,6 @@ class User(AbstractUser):
 
 class Stock(models.Model):
     name = models.CharField(max_length=100, default="stock", blank=False, null=False)
-    #value of stock to be extracted from the API
     description = models.CharField(max_length=200, default="stocks", blank=False, null=False)
 
 

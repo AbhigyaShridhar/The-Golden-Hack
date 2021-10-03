@@ -1,5 +1,5 @@
 
-{% extends "layout.html" %}
+{% extends "backend/layout.html" %}
 
 {% block title %}
     Quote
@@ -12,7 +12,7 @@
                 <option disabled selected value>Symbol</option>
 
                 {% for stock in stocks %}
-                    <option value="{{ stock.symbol }}" data-total-shares="{{ stock.total_shares }}">{{ stock.symbol }}</option>
+                    TODO
                 {% endfor %}
             </select>
         </div>

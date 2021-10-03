@@ -1,12 +1,13 @@
+{% extends "backend/layout.html" %}
 {% load crispy_forms_tags %}
-
-{% extends "layout.html" %}
 
 {% block title %}REGISTER{% endblock %}
 
 {% block main %}
   <form action="{% url 'backend:register' %}" method="post">
+    {% csrf_token %}
     {{ form | crispy }}
+    <br>
     <button class="btn btn-primary" type="submit">Register</button>
   </form>
   <br>

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'backend',
 
     #dependencies
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [

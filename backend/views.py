@@ -8,6 +8,8 @@ from django.views.generic import View
 from django.contrib.auth.decorators import login_required
 from .models import Stock, Transaction, User, TransactionHistory
 
+from .forms import LoginForm, RegisterForm
+
 # Create your views here.
 def index(request):
     return HttpResponse("HELLO WORLD!!")
@@ -84,7 +86,7 @@ class Register(View):
                     'message': "Passwords don't match",
                 })
             try:
-                user = Person.objects.create_user(first_name, last_name, email, uname, p1)
+                user = User.objects.create_user(uname, first_name=first_name, last_name=last_name, email=email, password=p1)
                 user.save()
 
             except IntegrityError:
@@ -213,7 +215,7 @@ class UserDashBoard(View, LoginRequiredMixin):
                 'stock': stock,
                 'transaction': transaction,
             })
-        
+
         allTransactionDetials = get_transaction_history(self, request, user.id)
 
 
@@ -293,8 +295,7 @@ class AddFriend(View, LoginRequiredMixin):
 #         allTransactions = TransactionHistory.objects.raw(
 #             'SELECT * FROM Transaction_History WHERE user = %s', [userID]
 #         )
-        
+
 #         return render(request, self.template, {
 #             'allTransactionsDetails': allTransactions,
 #         })
-
