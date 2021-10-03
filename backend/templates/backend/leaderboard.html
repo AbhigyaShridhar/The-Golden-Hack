@@ -6,5 +6,24 @@
 {% endblock %}
 
 {% block main %}
-    TODO
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Credits</th>
+                <th>Total Value Earned By Selling</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for details in usersAndProfit %}
+                <tr>
+                    <td>{{ details.rank }}</td>
+                    <td>{{ details.username }}</td>
+                    <td>{{ details.credits }}</td>
+                    <td>{{ details.profit }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

@@ -101,10 +101,13 @@ class Register(View):
 class BuyStock(View, LoginRequiredMixin):
     template = "backend/buy_stock.html"
 
-    def get_particular_stock(self, request, stock_id):
+    def get(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
+        # get stock price using stock.name and store in curr_price
+        curr_price = 100
         return render(request, self.template, {
             'stock': stock,
+            'price': curr_price,
         })
 
     # check if the stock id is present in user's transaction list
@@ -116,7 +119,7 @@ class BuyStock(View, LoginRequiredMixin):
                 return transaction
         return None
 
-    def Create_Or_Update_Transaction(self, request, stock_id):
+    def post(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
         user = self.request.user
         transaction = self.check_stock_id(stock_id)
@@ -126,7 +129,7 @@ class BuyStock(View, LoginRequiredMixin):
                 user=user,
                 stock=stock,
                 quantity=request.quantity,
-                totalExpenditure=request.price,
+                totalExpenditure=request.price*request.quantity,
             )
             intialQuant = 0
             transaction.save()
@@ -153,11 +156,19 @@ class BuyStock(View, LoginRequiredMixin):
 class SellStock(View, LoginRequiredMixin):
     template = "backend/sell_stock.html"
 
-    def get_particular_stock(self, request, stock_id):
+    def get(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
-        return render(request, self.template, {
-            'stock': stock,
-        })
+        # get stock price using stock.name and store in curr_price
+        curr_price = 100
+        user = self.request.user
+        transactions = user.transactions.all()
+        for transaction in transactions:
+            if transaction.stock.id == stock_id:
+                return render(request, self.template, {
+                    'stock': stock,
+                    'transaction': transaction,
+                    'price': curr_price,
+                })
 
     # check if the stock id is present in user's transaction list
     def check_stock_id(self, stock_id):
@@ -168,7 +179,7 @@ class SellStock(View, LoginRequiredMixin):
                 return transaction
         return None
 
-    def Update_Transaction(self, request, stock_id):
+    def post(self, request, stock_id):
         stock = Stock.objects.get(id=stock_id)
         user = self.request.user
         transaction = self.check_stock_id(stock_id)
@@ -189,7 +200,7 @@ class SellStock(View, LoginRequiredMixin):
                 stockQuote = stock.name,
                 priceAtWhichSold = request.price,
                 intialCredits = user.credits,
-                finalCredits = user.credits + request.price,
+                finalCredits = user.credits + request.price*request.quantity,
             )
             transactionHistory.save()
             return HttpResponseRedirect(reverse("backend:stock_list"))
@@ -203,7 +214,7 @@ class UserDashBoard(View, LoginRequiredMixin):
             'SELECT * FROM Transaction_History WHERE user = %s', [userID]
         )
 
-    def get_Stock_Owned_By_User(self, request):
+    def get(self, request):
         user = self.request.user
         transactions = user.transactions.all()
         # for each transaction, get the stock details and store them together
@@ -262,11 +273,15 @@ class LeaderBoard(View):
         users = User.objects.all()
         usersAndProfit = []
         for user in users:
+            i = 1;
             usersAndProfit.append({
                 'id': user.id,
+                'rank': i,
                 'name' : user.username,
                 'profit' : user.profit,
+                'credits' : user.credits,
             })
+            i += 1
         usersAndProfit = sorted(usersAndProfit, key=lambda k: k['profit'], reverse=True)
         return render(request, self.template, {
             'usersAndProfit': usersAndProfit,
@@ -277,7 +292,7 @@ class AddFriend(View, LoginRequiredMixin):
 # add a friend to a user
     template = "backend/add_friend.html"
 
-    def add_friend(self, request, userID):
+    def post(self, request, userID):
         CurrentUser = self.request.user
         user = User.objects.get(id=userID)
         user.friends.add(request.user)

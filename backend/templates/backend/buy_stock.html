@@ -6,9 +6,12 @@
 
 {% block main %}
     <form action="{% url 'backend:buy' %}" method="post">
-        TODO <!--get stock symbol and value --!>
+        <!-- TODO get stock symbol and value  -->
         <div class="form-group">
+            <h1>{{ stock.name }}</h1>
+            <p>{{ stock.description }}</p>
             <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="Shares" type="number" min="1" required />
+            <input autofocus class="form-control" name="price" placeholder="price" type="number" min="1" required value={curr_price}}/>
         </div>
         <button class="btn btn-primary" type="submit">Buy</button>
     </form>
